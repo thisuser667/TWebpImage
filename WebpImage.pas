@@ -23,6 +23,14 @@ uses Winapi.Windows, System.SysUtils, libwebp124, {ExtendedImageUtils,}
 {$WARN SYMBOL_PLATFORM OFF} // Disable platform warnings. This library is only supported on Windows.
 
 type
+  PWpQuad = ^TWpQuad;
+  TWpQuad = record
+    rgbRed: Byte;
+    rgbGreen: Byte;
+    rgbBlue: Byte;
+    rgbReserved: Byte;
+  end;
+
   TWebpFrame = record  // each image
     AlphaCompressed: Byte;  // 0 = not Alpha, 1 = Alpha not compresed;
       // 2 = Alpha compressed; = compressed or not is not important.
@@ -68,23 +76,21 @@ type
     object;
   TAfterFrameDrawnEvent = procedure(Sender: TObject) of
     object;
-  TNextFrameEvent = procedure(Sender: TObject;
-    FrameIndex: Integer) of object;
 
-  TAnimationSpeed = 0..1000;
+  TAnimationSpeed = 1..1000;
 
   TWebpImage = class(TGraphic)
   private
     FLoopIndex: Integer;  // infinite loop can be overridden
       // with InfiniteLoopAnyWays, despite almost all of the webp
       // files have intinite looping just the same.
-    FAltBackgroundColor: TRgbQuad;  // tcolor hasn't alpha
+    FAltBackgroundColor: TWpQuad;  // tcolor hasn't alpha
       // replace the background color in the file if
       // freplacebackgroundcolor is true
     FSourceAnimated: Boolean;  // what the file says about it.
     FAnimateOnGetCanvas: Boolean;  // internal processing.
     FAnimationSpeed: TAnimationSpeed; // 50 = normal speed div 2
-    FBackgroundColor: TRGbQuad;  // background color inside the file
+    FBackgroundColor: TWpQuad;  // background color inside the file
     FCurrentBits: TBytes;  // the canvas bits in each iteration
     FFileName: string;
     FNeedCompleteRedraw: Boolean;  // as blending changes
@@ -104,11 +110,11 @@ type
       // height or width can be widened or enlarged if
       // some frame has coordenates outside this rectangle.
       // just that part of the frame is not drawn.
-    FOnNextFrame: TNextFrameEvent;
+    FOnNextFrame: TNotifyEvent;
     FWidth: Integer;
     function GetAnimating: Boolean;
     function GetPaused: Boolean;
-    procedure SetAltBackgroundColor(Value: TRGbQuad);
+    procedure SetAltBackgroundColor(Value: TWpQuad);
     procedure SetReplaceBackgroundColor(Value: Boolean);
     procedure AnimateTimer(Sender: TObject); // internal ontimer event
   protected
@@ -159,7 +165,7 @@ type
     function LoopDurationinMs: Cardinal; // sum of all the delays
     property AnimationSpeed: TAnimationSpeed read FAnimationSpeed
       write FAnimationSpeed;
-    property AltBackgroundColor: TRGbQuad read
+    property AltBackgroundColor: TWpQuad read
       FAltBackgroundColor write SetAltBackgroundColor;
     property Animating: Boolean read GetAnimating;
     property CurrentFrame: Integer read FCurrentFrame write
@@ -174,7 +180,7 @@ type
     property OnAfterFrameDrawn: TAfterFrameDrawnEvent read
       FOnAfterFrameDrawn write FOnAfterFrameDrawn;
     property OnLoop: TNotifyEvent read FOnLoop write FOnLoop;
-    property OnNextFrame: TNextFrameEvent read FONNextFrame write
+    property OnNextFrame: TNotifyEvent read FONNextFrame write
       FOnNextFrame;
     property ReplaceBackgroundColor: Boolean read
       FReplaceBackgroundColor write SetReplaceBackgroundColor;
@@ -321,7 +327,7 @@ begin
   begin
     Inc(FCurrentFrame);
     if Assigned(FOnNextFrame) then
-      FOnNextFrame(Sender, FCurrentFrame);
+      FOnNextFrame(Sender);
   end
   else if (LoopCount = 0) or (FLoopIndex < LoopCount) then
   begin
@@ -431,7 +437,7 @@ begin
         FrameHeight:= config.input.height;
       if FrameWidth <> config.input.width then
         FrameWidth:= config.input.width;
-      config.output.colorspace := MODE_bgrATr;
+      config.output.colorspace := MODE_rgbATr; //MODE_bgrATr;
       config.output.RGBA.RGBA.stride:=
         ((((config.input.width * 32) + 31) and not 31)
         shr 3);
@@ -490,8 +496,8 @@ procedure TWebpImage.DrawBackground(ARect: TRect);
 var
   Row, Col: Integer;
   stride: Integer;
-  P: PRgbQuad;
-  backcl: TRgbQuad;
+  P: PWpQuad;
+  backcl: TWpQuad;
 begin
   if FReplaceBackGroundColor then
     backcl:= FAltBackgroundColor
@@ -517,7 +523,7 @@ procedure TWebpImage.DrawFrame(ACanvas: TCanvas; ARect: TRect;
   pfIndex: Integer);
 var
   Row, Col, canvasstride, framestride, minx, maxx: Integer;
-  P, P2: PRgbquad;
+  P, P2: PWpQuad;
   wic: TWicImage;  // remarkable better stretching quality than
                    // stretchdibits. Fast enough for me,
                    // maybe with Direct2D can be even faster.
@@ -610,14 +616,15 @@ begin
     wic:= TWicImage.Create;
     try
       if wic.ImagingFactory.CreateBitmapFromMemory(FWidth, FHeight,
-        GUID_WICPixelFormat32bppBGRA, canvasstride, Length(BlendedBits),
-        @BlendedBits[0], wicbitmap) = S_OK then
+        GUID_WICPixelFormat32bppRGBA, canvasstride,
+        Length(BlendedBits), @BlendedBits[0], wicbitmap) = S_OK then
       begin
         wic.Handle:= wicbitmap;
         ACanvas.StretchDraw(ARect, wic);
       end;
     finally
-      wic.free;
+      wicbitmap:= nil;
+      wic.Free;
     end;
     if Disposal and (Frames.Count > 1) then
       DrawBackground(Rect(FrameLeft, FrameTop, FrameLeft +
@@ -677,6 +684,7 @@ var
   webinfobyte: Byte;
   imageheader, unknownfourcc: Boolean;
   b1, b2, b3: Byte;
+  bcolor: TRGBquad;
 begin
   HasICCP:= false;
   HasFramesWithAlpha:= false;
@@ -784,7 +792,11 @@ begin
       end
       else if fourcc = 'ANIM' then
       begin
-        Stream.Read(FBackgroundColor, 4);
+        Stream.Read(bcolor, 4);
+        FBackgroundColor.rgbBlue:= bcolor.rgbRed;
+        FBackgroundColor.rgbGreen:= bcolor.rgbGreen;
+        FBackgroundColor.rgbRed:= bcolor.rgbBlue;
+        FBackgroundColor.rgbReserved:= bcolor.rgbReserved;
         unknownfourcc:= false;
         Stream.Read(LoopCount, 2);
         Stream.Seek(chunksize - 6, soCurrent);
@@ -926,7 +938,7 @@ begin
   inherited;
 end;
 
-procedure TWebpImage.SetAltBackgroundColor(Value: TRGBQuad);
+procedure TWebpImage.SetAltBackgroundColor(Value: TWpQuad);
 begin
   if Cardinal(Value) <>
     Cardinal(FAltBackgroundColor) then
