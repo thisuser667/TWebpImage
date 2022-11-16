@@ -10,6 +10,7 @@ unit libwebp124;
 // -----------------------------------------------------------------------------
 {$ALIGN ON}
 {$MINENUMSIZE 4}
+{$WARN SYMBOL_PLATFORM OFF} // Disable platform warnings. This library is only supported on Windows.
 interface
 
 const
@@ -282,33 +283,33 @@ type
   decode.h
   Main decoding functions for WEBP images.
  ******************************************************************************)
-procedure WebPFree(p : pointer); cdecl; external LIB_WEBP;
+procedure WebPFree(p : pointer); cdecl; external LIB_WEBP delayed;
 // Return the decoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-function WebPGetDecoderVersion: Integer; cdecl; external LIB_WEBP;
+function WebPGetDecoderVersion: Integer; cdecl; external LIB_WEBP delayed;
 // Retrieve basic header information: width, height.
 // This function will also validate the header and return 0 in
 // case of formatting error.
 // Pointers *width/*height can be passed NULL if deemed irrelevant.
 function WebPGetInfo(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): Integer; cdecl; external LIB_WEBP;
+  width, height: PInteger): Integer; cdecl; external LIB_WEBP delayed;
 // Decodes WEBP images pointed to by *data and returns RGB samples, along
 // with the dimensions in *width and *height.
 // The returned pointer should be deleted calling WebPFree(data).
 // Returns NULL in case of error.
 function WebPDecodeRGB(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): PByte; cdecl; external LIB_WEBP;
+  width, height: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 // Same as WebPDecodeRGB, but returning RGBA data.
 function WebPDecodeRGBA(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): PByte; cdecl; external LIB_WEBP;
+  width, height: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 // This variant decode to BGR instead of RGB.
 function WebPDecodeBGR(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): PByte; cdecl; external LIB_WEBP;
+  width, height: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 // This variant decodes to BGRA instead of RGBA.
 function WebPDecodeBGRA(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): PByte; cdecl; external LIB_WEBP;
+  width, height: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 function WebPDecodeARGB(const data: PByte; data_size: Cardinal;
-  width, height: PInteger): PByte; cdecl; external LIB_WEBP;
+  width, height: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 // Decode WEBP images stored in *data in Y'UV format(*). The pointer returned is
 // the Y samples buffer. Upon return, *u and *v will point to the U and V
 // chroma data. These U and V buffers need NOT be free()'d, unlike the returned
@@ -329,14 +330,18 @@ function WebPDecodeYUV(const data: PByte; data_size: Cardinal; width, height: PI
 // between scanlines. Hence, output_buffer_size is expected to be at least
 // output_stride x picture-height.
 function WebPDecodeRGBInto(const data: PByte; data_size: Cardinal;
-  output_buffer: PByte; output_buffer_size, output_stride: Integer): PByte; cdecl; external LIB_WEBP;
+  output_buffer: PByte; output_buffer_size, output_stride: Integer):
+  PByte; cdecl; external LIB_WEBP delayed;
 function WebPDecodeRGBAInto(const data: PByte; data_size: Cardinal;
-  output_buffer: PByte; output_buffer_size, output_stride: Integer): PByte; cdecl; external LIB_WEBP;
+  output_buffer: PByte; output_buffer_size, output_stride: Integer):
+  PByte; cdecl; external LIB_WEBP delayed;
 // BGR variants
 function WebPDecodeBGRInto(const data: PByte; data_size: Cardinal;
-  output_buffer: PByte; output_buffer_size, output_stride: Integer): PByte; cdecl; external LIB_WEBP;
+  output_buffer: PByte; output_buffer_size, output_stride: Integer):
+  PByte; cdecl; external LIB_WEBP delayed;
 function WebPDecodeBGRAInto(const data: PByte; data_size: Cardinal;
-  output_buffer: PByte; output_buffer_size, output_stride: Integer): PByte; cdecl; external LIB_WEBP;
+  output_buffer: PByte; output_buffer_size, output_stride: Integer):
+  PByte; cdecl; external LIB_WEBP delayed;
 // WebPDecodeYUVInto() is a variant of WebPDecodeYUV() that operates directly
 // into pre-allocated luma/chroma plane buffers. This function requires the
 // strides to be passed: one for the luma plane and one for each of the
@@ -347,7 +352,8 @@ function WebPDecodeBGRAInto(const data: PByte; data_size: Cardinal;
 function WebPDecodeYUVInto(const data: PByte; data_size: Cardinal;
                            luma: PByte; luma_size, luma_stride: Integer;
                            u: PByte; u_size, u_stride: Integer;
-                           v: PByte; v_size, v_stride: Integer): PByte; cdecl; external LIB_WEBP;
+                           v: PByte; v_size, v_stride: Integer):
+                           PByte; cdecl; external LIB_WEBP delayed;
 //-----------------------------------------------------------------------------
 // Incremental decoding
 //
@@ -371,14 +377,16 @@ function WebPDecodeYUVInto(const data: PByte; data_size: Cardinal;
 //   }
 //   WebPIDelete(idec);
 // Creates a WebPIDecoder object. Returns NULL in case of failure.
-function WebPINew(mode: WEBP_CSP_MODE): PWebPIDecoder; cdecl; external LIB_WEBP;
+function WebPINew(mode: WEBP_CSP_MODE): PWebPIDecoder; cdecl;
+  external LIB_WEBP delayed;
 // This function allocates and initializes an incremental-decoder object, which
 // will output the r/g/b(/a) samples specified by 'mode' into a preallocated
 // buffer 'output_buffer'. The size of this buffer is at least
 // 'output_buffer_size' and the stride (distance in bytes between two scanlines)
 // is specified by 'output_stride'. Returns NULL if the allocation failed.
 function WebPINewRGB(mode: WEBP_CSP_MODE; output_buffer: PByte;
-  output_buffer_size, output_stride: Integer): PWebPIDecoder; cdecl; external LIB_WEBP;
+  output_buffer_size, output_stride: Integer): PWebPIDecoder; cdecl;
+  external LIB_WEBP delayed;
 // This function allocates and initializes an incremental-decoder object, which
 // will output the raw luma/chroma samples into a preallocated planes. The luma
 // plane is specified by its pointer 'luma', its size 'luma_size' and its stride
@@ -388,32 +396,32 @@ function WebPINewRGB(mode: WEBP_CSP_MODE; output_buffer: PByte;
 // Returns NULL if the allocation failed.
 function WebPINewYUV(luma: PByte; luma_size, luma_stride: Integer;
                           u: PByte; u_size, u_stride: Integer;
-                          v: PByte; v_size, v_stride: Integer): PWebPIDecoder; cdecl; external LIB_WEBP;
+                          v: PByte; v_size, v_stride: Integer): PWebPIDecoder; cdecl; external LIB_WEBP delayed;
 // Deletes the WebpBuffer object and associated memory. Must always be called
 // if WebPINew, WebPINewRGB or WebPINewYUV succeeded.
-procedure WebPIDelete(const idec: PWebPIDecoder); cdecl; external LIB_WEBP;
+procedure WebPIDelete(const idec: PWebPIDecoder); cdecl; external LIB_WEBP delayed;
 // Copies and decodes the next available data. Returns VP8_STATUS_OK when
 // the image is successfully decoded. Returns VP8_STATUS_SUSPENDED when more
 // data is expected. Returns error in other cases.
 function WebPIAppend(const idec: PWebPIDecoder; const data: PByte;
-  data_size: Cardinal): TVP8StatusCode; cdecl; external LIB_WEBP;
+  data_size: Cardinal): TVP8StatusCode; cdecl; external LIB_WEBP delayed;
 // A variant of the above function to be used when data buffer contains
 // partial data from the beginning. In this case data buffer is not copied
 // to the internal memory.
 // Note that the value of the 'data' pointer can change between calls to
 // WebPIUpdate, for instance when the data buffer is resized to fit larger data.
 function WebPIUpdate(const idec: PWebPIDecoder; const data: PByte;
-  data_size: Cardinal): TVP8StatusCode; cdecl; external LIB_WEBP;
+  data_size: Cardinal): TVP8StatusCode; cdecl; external LIB_WEBP delayed;
 // Returns the RGB image decoded so far. Returns NULL if output params are not
 // initialized yet. *last_y is the index of last decoded row in raster scan
 // order. Some pointers (*last_y, *width etc.) can be NULL if corresponding
 // information is not needed.
 function WebPIDecGetRGB(const idec: PWebPIDecoder; last_y, width,
-  height, stride: PInteger): PByte; cdecl; external LIB_WEBP;
+  height, stride: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 // Same as above function to get YUV image. Returns pointer to the luma plane
 // or NULL in case of error.
 function WebPIDecGetYUV(const idec: PWebPIDecoder; last_y: PInteger;
-  var u, v: PByte; width, height, stride, uv_stride: PInteger): PByte; cdecl; external LIB_WEBP;
+  var u, v: PByte; width, height, stride, uv_stride: PInteger): PByte; cdecl; external LIB_WEBP delayed;
 
 // added in 1.2.4
 const
@@ -421,17 +429,17 @@ const
 
 function WebPGetFeaturesInternal(const data: PByte;
   data_size: Cardinal; features: PWebPBitstreamFeatures;
-  version: Integer): TVP8StatusCode; cdecl; external LIB_WEBP;
+  version: Integer): TVP8StatusCode; cdecl; external LIB_WEBP delayed;
 function WebPInitDecoderConfigInternal(config:
   PWebPDecoderConfig; version: Integer): Integer;cdecl;
-  external LIB_WEBP;
+  external LIB_WEBP delayed;
 function WebPInitDecBufferInternal(buffer: PWebPDecBuffer;
-  version: Integer): Integer; cdecl; external LIB_WEBP;
+  version: Integer): Integer; cdecl; external LIB_WEBP delayed;
 procedure WebPFreeDecBuffer(buffer: PWebPDecBuffer); cdecl;
-  external LIB_WEBP;
+  external LIB_WEBP delayed;
 function WebPDecode(const data: PByte; data_size: NativeUint;
   config: PWebPDecoderConfig): TVP8StatusCode; cdecl;
-  external LIB_WEBP;
+  external LIB_WEBP delayed;
 
 (*******************************************************************************
    decode_vp8.h
@@ -456,31 +464,31 @@ function WebPDecode(const data: PByte; data_size: NativeUint;
 //   return ok;
 
 // Create a new decoder object.
-function VP8New: PWebPIDecoder; cdecl; external LIB_WEBP;
+function VP8New: PWebPIDecoder; cdecl; external LIB_WEBP delayed;
 // Must be called to make sure 'io' is initialized properly.
 // Returns false in case of version mismatch. Upon such failure, no other
 // decoding function should be called (VP8Decode, VP8GetHeaders, ...)
 function VP8InitIo(const io: PVP8Io): Integer;
 // Start decoding a new picture. Returns true if ok.
-function VP8GetHeaders(const dec: PVP8Decoder; const io: PVP8Io): Integer; cdecl; external LIB_WEBP;
+function VP8GetHeaders(const dec: PVP8Decoder; const io: PVP8Io): Integer; cdecl; external LIB_WEBP delayed;
 // Decode a picture. Will call VP8GetHeaders() if it wasn't done already.
 // Returns false in case of error.
-function VP8Decode(const dec: PVP8Decoder; const io: PVP8Io): Integer; cdecl; external LIB_WEBP;
+function VP8Decode(const dec: PVP8Decoder; const io: PVP8Io): Integer; cdecl; external LIB_WEBP delayed;
 // Return current status of the decoder:
-function VP8Status(const dec: PVP8Decoder): TVP8StatusCode; cdecl; external LIB_WEBP;
+function VP8Status(const dec: PVP8Decoder): TVP8StatusCode; cdecl; external LIB_WEBP delayed;
 // return readable string corresponding to the last status.
-function VP8StatusMessage(const dec: PVP8Decoder): PAnsiChar; cdecl; external LIB_WEBP;
+function VP8StatusMessage(const dec: PVP8Decoder): PAnsiChar; cdecl; external LIB_WEBP delayed;
 // Resets the decoder in its initial state, reclaiming memory.
 // Not a mandatory call between calls to VP8Decode().
-procedure VP8Clear(const dec: PVP8Decoder); cdecl; external LIB_WEBP;
+procedure VP8Clear(const dec: PVP8Decoder); cdecl; external LIB_WEBP delayed;
 // Destroy the decoder object.
-procedure VP8Delete(const dec: PVP8Decoder); cdecl; external LIB_WEBP;
+procedure VP8Delete(const dec: PVP8Decoder); cdecl; external LIB_WEBP delayed;
 (******************************************************************************
   WebP encoder: main interface
  ******************************************************************************)
 // Return the encoder's version number, packed in hexadecimal using 8bits for
 // each of major/minor/revision. E.g: v2.5.7 is 0x020507.
-function WebPGetEncoderVersion: Integer; cdecl; external LIB_WEBP;
+function WebPGetEncoderVersion: Integer; cdecl; external LIB_WEBP delayed;
 //-----------------------------------------------------------------------------
 // One-stop-shop call! No questions asked:
 // Returns the size of the compressed data (pointed to by *output), or 0 if
@@ -488,25 +496,25 @@ function WebPGetEncoderVersion: Integer; cdecl; external LIB_WEBP;
 // using the call 'WebPFree(output)'.
 // Currently, alpha values are discarded.
 function WebPEncodeRGB(const rgb: PByte; width, height, stride: Integer;
-  quality_factor: single; var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  quality_factor: single; var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 function WebPEncodeBGR(const bgr: PByte; width, height, stride: Integer;
-  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 function WebPEncodeRGBA(const rgba: PByte; width, height, stride: Integer;
-  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 
 function WebPEncodeBGRA(const bgra: PByte; width, height, stride: Integer;
-  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  quality_factor: Single; var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 // Note these functions, like the lossy versions, use the library's default
 // settings. For lossless this means 'exact' is disabled. RGB values in
 // transparent areas will be modified to improve compression.
 function WebPEncodeLosslessRGB(const bgra: PByte; width, height, stride: Integer;
-  var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 function WebPEncodeLosslessBGR(const bgra: PByte; width, height, stride: Integer;
-  var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 function WebPEncodeLosslessRGBA(const bgra: PByte; width, height, stride: Integer;
-  var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 function WebPEncodeLosslessBGRA(const bgra: PByte; width, height, stride: Integer;
-  var output: PByte): Cardinal; cdecl; external LIB_WEBP;
+  var output: PByte): Cardinal; cdecl; external LIB_WEBP delayed;
 // Should always be called, to initialize a fresh WebPConfig structure before
 // modification. Returns 0 in case of version mismatch. WebPConfigInit() must
 // have succeeded before using the 'config' object.
@@ -518,7 +526,7 @@ function WebPConfigInit(const config: PWebPConfig): Integer;
 function WebPConfigPreset(const config: PWebPConfig; preset: TWebPPreset;
   quality: Single): Integer;
 // Returns 1 if all parameters are in valid range and the configuration is OK.
-function WebPValidateConfig(const config: PWebPConfig): Integer; cdecl; external LIB_WEBP;
+function WebPValidateConfig(const config: PWebPConfig): Integer; cdecl; external LIB_WEBP delayed;
 // Should always be called, to initialize the structure. Returns 0 in case of
 // version mismatch. WebPPictureInit() must have succeeded before using the
 // 'picture' object.
@@ -529,38 +537,38 @@ function WebPPictureInit(const picture: PWebPPicture): Integer;
 // Allocate y/u/v buffers as per width/height specification.
 // Note! This function will free the previous buffer if needed.
 // Returns 0 in case of memory error.
-function WebPPictureAlloc(const picture: PWebPPicture): Integer; cdecl; external LIB_WEBP;
+function WebPPictureAlloc(const picture: PWebPPicture): Integer; cdecl; external LIB_WEBP delayed;
 // Release memory allocated by WebPPictureAlloc() or WebPPictureImport*()
 // Note that this function does _not_ free the memory pointed to by 'picture'.
-procedure WebPPictureFree(const picture: PWebPPicture); cdecl; external LIB_WEBP;
+procedure WebPPictureFree(const picture: PWebPPicture); cdecl; external LIB_WEBP delayed;
 // Copy the pixels of *src into *dst, using WebPPictureAlloc.
 // Returns 0 in case of memory allocation error.
-function WebPPictureCopy(const src, dst: PWebPPicture): Integer; cdecl; external LIB_WEBP;
+function WebPPictureCopy(const src, dst: PWebPPicture): Integer; cdecl; external LIB_WEBP delayed;
 // self-crops a picture to the rectangle defined by top/left/width/height.
 // Returns 0 in case of memory allocation error, or if the rectangle is
 // outside of the source picture.
 function WebPPictureCrop(const picture: PWebPPicture;
-  left, top, width, height: Integer): Integer; cdecl; external LIB_WEBP;
+  left, top, width, height: Integer): Integer; cdecl; external LIB_WEBP delayed;
 // Colorspace conversion function. Previous buffer will be free'd, if any.
 // *rgb buffer should have a size of at least height * rgb_stride.
 // Returns 0 in case of memory error.
 function WebPPictureImportRGB(const picture: PWebPPicture;
-  const rgb: PByte; rgb_stride: Integer): Integer; cdecl; external LIB_WEBP;
+  const rgb: PByte; rgb_stride: Integer): Integer; cdecl; external LIB_WEBP delayed;
 // Same, but for RGBA buffer. Alpha information is ignored.
 function WebPPictureImportRGBA(const picture: PWebPPicture;
-  const rgba: PByte; rgba_stride: Integer): Integer; cdecl; external LIB_WEBP;
+  const rgba: PByte; rgba_stride: Integer): Integer; cdecl; external LIB_WEBP delayed;
 // Variant of the above, but taking BGR input:
 function WebPPictureImportBGR(const picture: PWebPPicture;
-  const bgr: PByte; bgr_stride: Integer): Integer; cdecl; external LIB_WEBP;
+  const bgr: PByte; bgr_stride: Integer): Integer; cdecl; external LIB_WEBP delayed;
 function WebPPictureImportBGRA(const picture: PWebPPicture;
-  const bgra: PByte; bgra_stride: Integer): Integer; cdecl; external LIB_WEBP;
+  const bgra: PByte; bgra_stride: Integer): Integer; cdecl; external LIB_WEBP delayed;
 //-----------------------------------------------------------------------------
 // Main call
 // Main encoding call, after config and picture have been initialiazed.
 // 'picture' must be less than 16384x16384 in dimension, and the 'config' object
 // must be a valid one.
 // Returns false in case of error, true otherwise.
-function WebPEncode(const config: PWebPConfig; const picture: PWebPPicture): Integer; cdecl; external LIB_WEBP;
+function WebPEncode(const config: PWebPConfig; const picture: PWebPPicture): Integer; cdecl; external LIB_WEBP delayed;
 
 
 function WebPGetFeatures(data: PByte; data_size: NativeUint;
@@ -570,7 +578,7 @@ function WebPInitDecBuffer(buffer: PWebPDecBuffer): Integer;
 
 implementation
 // Internal, version-checked, entry point
-function VP8InitIoInternal(const io: PVP8Io; bersion: Integer): Integer; cdecl; external LIB_WEBP;
+function VP8InitIoInternal(const io: PVP8Io; bersion: Integer): Integer; cdecl; external LIB_WEBP delayed;
 function VP8InitIo(const io: PVP8Io): Integer;
 begin
   Result := VP8InitIoInternal(io, WEBP_DECODER_ABI_VERSION);
@@ -579,7 +587,7 @@ end;
 const
   WEBP_ENCODER_ABI_VERSION = $0001;
 function WebPConfigInitInternal(const conf: PWebPConfig; preset: TWebPPreset;
-  quality: single; version: Integer): Integer; cdecl; external LIB_WEBP;
+  quality: single; version: Integer): Integer; cdecl; external LIB_WEBP delayed;
 function WebPConfigInit(const config: PWebPConfig): Integer;
 begin
   Result := WebPConfigInitInternal(config, WEBP_PRESET_DEFAULT, 75.0,  WEBP_ENCODER_ABI_VERSION);
@@ -590,7 +598,7 @@ begin
   Result := WebPConfigInitInternal(config, preset, quality, WEBP_ENCODER_ABI_VERSION);
 end;
 // Internal, version-checked, entry point
-function WebPPictureInitInternal(const picture: PWebPPicture; version: Integer): Integer; cdecl; external LIB_WEBP;
+function WebPPictureInitInternal(const picture: PWebPPicture; version: Integer): Integer; cdecl; external LIB_WEBP delayed;
 function WebPPictureInit(const picture: PWebPPicture): Integer;
 begin
   Result := WebPPictureInitInternal(picture, WEBP_ENCODER_ABI_VERSION);
