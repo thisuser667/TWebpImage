@@ -9,4 +9,4 @@ It's only for Windows, I don't think it would be too hard to adapt it for making
 
 Use of this, descenders or adaptations, is totally free for me, only subject to whether there may be something established for similar use by webp or windows or delphi format.
 
-All the extern declarations in libweb124.pas are now declared as 'delayed'. This is because of the new file, ExtendedImage, a descendant of TImage that is a kind of intersection of GifImage, WebpImage and finally, because TPngImage and TJpegImage fail with some files, instead of use them, just use another TWicImage temporary file with the static formats.
+All the extern declarations in libweb124.pas are now declared as 'delayed'. This is because of the new file, ExtendedImage, a descendant of TImage that is a kind of intersection of GifImage, WebpImage and finally, because TPngImage and TJpegImage fail with some files, instead of use them, just use another TWicImage temporary file with the static formats. Without the 'delayed', trying to install ExtendedImage in a package, returns "Entry point not found".
