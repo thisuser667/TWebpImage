@@ -1,5 +1,13 @@
 unit WebpImage;
 
+// Copyright 2010 Google Inc.
+//
+// This code is licensed under the same terms as WebM:
+//  Software License Agreement:  http://www.webmproject.org/license/software/
+//  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
+//
+// Made by thisuser667    
+
 interface
 
 // Done by the user of the web page in which it is originally
