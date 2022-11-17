@@ -1,3 +1,13 @@
+{*******************************************************}
+{                                                       }
+{            Delphi Visual Component Library            }
+{                                                       }
+{ Copyright(c) 1995-2021 Embarcadero Technologies, Inc. }
+{              All rights reserved                      }
+{                                                       }
+{ Adapted by thisuser667                                }
+{*******************************************************}
+
 unit ExtendedImage;
 
 interface
