@@ -10,9 +10,6 @@ unit WebpImage;
 
 interface
 
-// Done by the user of the web page in which it is originally
-  // published.
-// Licensing: Do what you want with it.
 // This is NOT something very pro, but it's a good start to do something pro,
 // which, as I insist, you are completely free to do it.
 // It is to be used with libwebp.dll 1.2.4
