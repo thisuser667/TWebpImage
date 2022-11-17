@@ -6,7 +6,7 @@ unit libwebp124;
 //  Additional IP Rights Grant:  http://www.webmproject.org/license/additional/
 //
 //  Original Delphi API by Henri Gourvest <hgourvest@gmail.com>
-//  Updated by Daniel Wykerd
+//  Updated by thisuser667
 // -----------------------------------------------------------------------------
 {$ALIGN ON}
 {$MINENUMSIZE 4}
