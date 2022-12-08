@@ -8,3 +8,6 @@ It doesn't include the libwebp.dll library. You can download it precompiled in h
 WebpImage is for Windows, LazWebpImage for FPC.
 
 All the extern declarations in libweb124.pas are now declared as 'delayed'. This is because of the new file, ExtendedImage, a descendant of TImage that is a kind of intersection of GifImage, WebpImage and finally, because TPngImage and TJpegImage fail with some files, instead of use them, just use another TWicImage temporary file with the static formats. Without the 'delayed', trying to install ExtendedImage in a package, returns "Entry point not found". ExtendedImage is only for Windows.
+
+Gif didn't work very well in ExtendedImage, now is corrected.
+Also clear that I couldn't check the Lazarus version in other platform than Windows.
