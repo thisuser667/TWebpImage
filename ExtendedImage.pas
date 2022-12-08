@@ -7,7 +7,6 @@
 {                                                       }
 { Adapted by thisuser667                                }
 {*******************************************************}
-
 unit ExtendedImage;
 
 interface
@@ -25,7 +24,7 @@ type
     procedure DoNextFrame; override;
     procedure Loop; override;
   public
-    constructor Create(Image: TExtendedGifImage);
+    constructor Create(AImage: TGIFImage); override;
   end;
 
   TExtendedGifImage = class(Vcl.imaging.Gifimg.TGIFImage)
@@ -46,6 +45,8 @@ type
   protected
   end;
 
+  TExtendedImageKind = (ikNone, ikWic, ikGif, ikWebp);
+
   TExtendedImage = class(TImage)
   private
     FAnimationSpeed: TAnimationSpeed;
@@ -53,6 +54,7 @@ type
     FOnNextFrame: TNotifyEvent;
     FFileName: string;
     FAnimating: Boolean;
+    FKind: TExtendedImageKind;
     procedure SetOnNextFrameEvent(Event: TNotifyEvent);
     procedure SetOnLoop(Event: TNotifyEvent);
     function GetOnNextFrameEvent: TNotifyEvent;
@@ -65,8 +67,6 @@ type
   public
     function RectImageSize: TSize;
     function RectImage: TRect;
-    function IsGif: Boolean;
-    function IsWebp: Boolean;
     function CanBeAnimated: Boolean;
     procedure DrawFrame(ACanvas: TCanvas; ARect: TRect;
       DrawFrameIndex: Integer);
@@ -83,6 +83,7 @@ type
     property Animating: Boolean read GetAnimating write
       SetAnimating;
     property FrameINdex: Integer read GetCurrentFrameIndex;
+    property ImageKind: TExtendedImageKind read FKind;
   published
     property AnimationSpeed: TAnimationSpeed read GetAnimationSpeed
       write SetAnimationSpeed;
@@ -99,6 +100,9 @@ procedure Register;
 implementation
 
 uses Vcl.Imaging.GIFConsts;
+
+{var
+  gifregistered: Boolean;}
 
 { TAnimatedImage }
 
@@ -207,9 +211,9 @@ end;
 
 function TExtendedImage.CanBeAnimated: Boolean;
 begin
-  if IsGif then
+  if FKind = ikGif then
     Result:= GetGif.Images.Count > 1
-  else if IsWebp then
+  else if FKind = ikWebp then
     Result:= TWebpImage.CanBeAnimated(FFilename)
   else
     Result:= false;
@@ -220,6 +224,7 @@ begin
   inherited;
   FAnimating:= false;
   FOnLoop:= nil;
+  FKind:= ikNone;
   FOnNextFrame:= nil;
   FFileName:= '';
   FAnimationSpeed:= 100;
@@ -236,7 +241,7 @@ begin
   if (FFileName = '') or (DrawFrameIndex < 0) or
     (DrawFrameIndex > GetImageCount - 1) then
     exit;
-  if IsGif then
+  if FKind = ikGif then
   begin
     Gf:= GetGif;
     Bitmap:= TBitmap.Create;
@@ -263,7 +268,7 @@ begin
       Bitmap.Free;
     end;
   end
-  else if IsWebp then
+  else if FKind = ikWebp then
     GetWebp.DrawFrame(ACanvas, ARect, DrawFrameIndex);
 end;
 
@@ -273,15 +278,15 @@ begin
   if (csDesigning in ComponentState) or
     not CanBeAnimated or not Animating then
     exit;
-  if IsGif then
+  if FKind = ikGif then
     Result:= GetGif.FrameIndex
-  else if IsWebp then
+  else if FKind = ikWebp then
     Result:= GetWebp.CurrentFrame;
 end;
 
 function TExtendedImage.GetGif: TExtendedGIFImage;
 begin
-  if IsGif then
+  if FKind = ikGif then
     Result:= TExtendedGifImage(Picture.Graphic)
   else
     Result:= nil;
@@ -289,9 +294,9 @@ end;
 
 function TExtendedImage.GetImageCount: Integer;
 begin
-  if IsGif then
+  if FKind = ikGif then
     Result:= GetGif.Images.Count
-  else if IsWebp then
+  else if FKind = ikWebp then
     Result:= GetWebp.Frames.Count
   else
     Result:= 0;
@@ -301,9 +306,9 @@ function TExtendedImage.GetOnLoop: TNotifyEvent;
 begin
   if not (csDesigning in ComponentState) and Animating then
   begin
-    if IsGif then
+    if FKind = ikGif then
       FOnLoop:= GetGif.OnLoop
-    else if IsWebp then
+    else if FKind = ikWebp then
       FOnLoop:= Getwebp.OnLoop;
   end;
   Result:= FOnLoop;
@@ -313,9 +318,9 @@ function TExtendedImage.GetOnNextFrameEvent: TNotifyEvent;
 begin
   if not (csDesigning in ComponentState) and Animating then
   begin
-    if IsGif then
+    if FKind = ikGif then
       FOnNextFrame:= GetGif.OnNextFrame
-    else if IsWebp then
+    else if FKind = ikWebp then
       FOnNextFrame:= GetWebp.OnNextFrame;
   end;
   Result:= FOnNextFrame;
@@ -326,9 +331,9 @@ begin
   if not (csDesigning in ComponentState) and
     CanbeAnimated then
   begin
-    if IsGif then
+    if FKind = ikGif then
       FAnimating:= GetGif.Animate
-    else if IsWebp then
+    else if FKind = ikWebp then
       FAnimating:= GetWebp.Animating;
   end;
   Result:= FAnimating;
@@ -336,19 +341,20 @@ end;
 
 function TExtendedImage.GetAnimationSpeed: TAnimationSpeed;
 begin
+  Result:= 100;
   if (csDesigning in ComponentState) or
     not CanbeAnimated or not Animating then
     exit;
-  if IsGif then
+  if FKind = ikGif then
     FAnimationSpeed:= GetGif.AnimationSpeed
-  else if IsWebp then
+  else if FKind = ikWebp then
     FanimationSpeed:= GetWebp.AnimationSpeed;
   Result:= FAnimationSpeed;
 end;
 
 function TExtendedImage.GetWebp: TWebpImage;
 begin
-  if IsWebp then
+  if FKind = ikWebp then
     Result:= TWebpImage(Picture.Graphic)
   else
     Result:= nil;
@@ -370,42 +376,37 @@ begin
     Result:= Picture.Width;
 end;
 
-function TExtendedImage.IsGif: Boolean;
-begin
-  if FFileName = '' then
-    Result:= false
-  else
-    Result:= CompareText(Picture.Graphic.ClassName,
-      'TExtendedGifImage') = 0;
-end;
-
-function TExtendedImage.IsWebp: Boolean;
-begin
-  if FFileName = '' then
-    Result:= false
-  else
-    Result:= CompareText(Picture.Graphic.ClassName, 'TWebpImage') = 0;
-end;
-
 procedure TExtendedImage.LoadFromFile(Filename: string);
 var
   sext: string;
   wic: TWicImage;
-  gf: TExtendedGifImage;
-  wp: TWebpImage;
+  signature: array[0..$C] of AnsiChar;
+  f: TFileStream;
+  fk: TExtendedImageKind;
 begin
   Picture.Graphic:= nil;
   if FileExists(FileName) then
   begin
     try
+      fk:= ikNone;
+      f:= TfileStream.Create(FileName, fmOpenRead);
+      try
+        f.Read(signature, $C);
+        if Pos('WEBP', signature + 8) = 1 then
+          fk:= ikWebp
+        else if Pos('GIF', signature) = 1 then
+          fk:= ikGif;
+      except
+      end;
+      f.Free;
       sext:= ExtractFileExt(FileName);
-      if (CompareText(sext, '.gif') <> 0) and
-        (CompareText(sext, '.webp') <> 0) then
+      if fk = ikNone then
       begin
         wic:= TWicImage.Create;
         try
           wic.LoadFromFile(FileName);
           Picture.Assign(wic);
+          FKind:= ikWic;
         finally
           wic.Free;
         end;
@@ -416,27 +417,28 @@ begin
         Picture.LoadFromFile(FileName);
       end;
       FFileName:= FileName;
-      if AnimateOnLoad and CanBeAnimated then
+      if Picture.Graphic.ClassName = 'TGIFImage' then
       begin
-        gf:= GetGif;
-        if gf <> nil then
+        FKind:= ikGif;
+        with TExtendedGifImage(Picture.Graphic) do
         begin
-          gf.OnLoop:= FOnLoop;
-          gf.AnimationSpeed:= FAnimationSpeed;
-          gf.OnNextFrame:= FOnNextFrame;
-        end
-        else
-        begin
-          wp:= GetWebp;
-          if wp <> nil then
-          begin
-            wp.OnLoop:= FOnLoop;
-            wp.AnimationSpeed:= FAnimationSpeed;
-            wp.OnNextFrame:= FOnNextFrame;
-          end;
+          OnLoop:= FOnLoop;
+          AnimationSpeed:= FAnimationSpeed;
+          OnNextFrame:= FOnNextFrame;
         end;
-        StartAnimation;
+      end
+      else if Picture.Graphic is TWebpImage then
+      begin
+        FKind:= ikWebp;
+        with TWebpImage(Picture.Graphic) do
+        begin
+          OnLoop:= FOnLoop;
+          AnimationSpeed:= FAnimationSpeed;
+          OnNextFrame:= FOnNextFrame;
+        end;
       end;
+      if (FKind > ikWic) and CanBeAnimated then
+        StartAnimation;
     except
     end;
   end;
@@ -450,13 +452,13 @@ begin
   Result:= 0;
   if not CanbeAnimated then
     exit;
-  if IsGif then
+  if FKind = ikGif then
   begin
     gf:= GetGif;
     for I:= 0 to gf.Images.Count -1 do
       Result:= Result + TGifFrame(gf.Images.Frames[I]).GCE.Delay * 10;
   end
-  else if IsWebp then
+  else if FKind = ikWebp then
     Result:= GetWebp.LoopDurationinMs;
 end;
 
@@ -464,9 +466,9 @@ procedure TExtendedImage.SetOnLoop(Event: TNotifyEvent);
 begin
   FOnLoop:= Event;
   if not (csDesigning in ComponentState) and CanBeAnimated then
-    if IsGif then
+    if FKind = ikGif then
       GetGif.OnLoop:= Event
-    else if IsWebp then
+    else if FKind = ikWebp then
       Getwebp.OnLoop:= Event;
 end;
 
@@ -474,9 +476,9 @@ procedure TExtendedImage.SetOnNextFrameEvent(Event: TNotifyEvent);
 begin
   FOnNextFrame:= Event;
   if not (csDesigning in ComponentState) and CanBeAnimated then
-    if IsGif then
+    if FKind = ikGif then
       GetGif.OnNextFrame:= Event
-    else if IsWebp then
+    else if FKind = ikWebp then
       Getwebp.OnNextFrame:= Event;
 end;
 
@@ -509,7 +511,7 @@ begin
     if (csDesigning in ComponentState) or
       not CanbeAnimated then
       exit;
-    if IsGif then
+    if FKind = ikGif then
     begin
       gf:= GetGif;
       if gf.Animate then
@@ -519,7 +521,7 @@ begin
         gf.Animate:= true;
       end;
     end
-    else if IsWebp then
+    else if FKind = ikWebp then
     begin
       wb:= GetWebp;
       if wb.Animating then
@@ -532,7 +534,7 @@ procedure TExtendedImage.StartAnimation;
 begin
   if not CanbeAnimated or (csDesigning in ComponentState) then
     exit;
-  if IsGif then
+  if FKind = ikGif then
     GetGif.Animate:= true
   else
     GetWebp.Animate;
@@ -542,7 +544,7 @@ procedure TExtendedImage.StopAnimation;
 begin
   if not CanbeAnimated or (csDesigning in ComponentState) then
     exit;
-  if IsGif then
+  if FKind = ikGif then
     GetGif.Animate:= false
   else
     GetWebp.PauseAnimation;
@@ -560,15 +562,12 @@ begin
   TExtendedRenderer(Result).Image:= Self;
 end;
 
-var
-  gifregistered: Boolean;
-
 { TExtendedRenderer }
 
-constructor TExtendedRenderer.Create(Image: TExtendedGifImage);
+constructor TExtendedRenderer.Create(AImage: TGIFImage);
 begin
-  inherited Create(TGifImage(Image));
-  Self.Image:= Image;
+  inherited;
+  Self.Image:= TExtendedGifImage(Image);
 end;
 
 procedure TExtendedRenderer.DoNextFrame;
@@ -587,17 +586,6 @@ begin
 end;
 
 initialization
-  gifregistered:= GraphicFilter(TGifImage) <> '';
-  if GifRegistered then
-    TPicture.UnregisterGraphicClass(TGifImage);
-  TPicture.RegisterFileFormat('GIF', 'Gonz Files',
-    TExtendedGIFImage);
   AnimateOnLoad:= true;
-
-finalization
-  TPicture.UnregisterGraphicClass(TExtendedGifImage);
-  if GifRegistered then
-    TPicture.RegisterFileFormat('GIF', sGIFImageFile,
-      TGIFImage);
 
 end.
