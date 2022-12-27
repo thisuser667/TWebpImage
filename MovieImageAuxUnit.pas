@@ -11,13 +11,29 @@ interface
 uses
   {$IFNDEF FPC and IFDEF WINDOWS}
   {$DEFINE NOFPCW}
-  Winapi.Windows, System.Classes, System.SysUtils, System.AnsiStrings;
+  Winapi.Windows, System.Classes, System.SysUtils, System.AnsiStrings, Vcl.ExtCtrls,
+    Vcl.Forms, Vcl.Dialog;
   {$ELSE}
   LclIntf, LMessages, Dialogs, LclType, Classes, SysUtils, Controls, Forms, StdCtrls,
     ExtCtrls, FpImage, FpReadBmp, FpReadJpeg, FpReadPng, FpReadTiff, FpReadXpm;
   {$ENDIF}
 
 type
+  TMsgDlgEx = class
+  private
+    FMsgFrm: TForm;
+    FParent: TForm;
+    FTimer: TTimer;
+    FDefModRes: TModalResult;
+    procedure DoOnTimer(Sender: TObject);
+  public
+    constructor Create(const AMsg: string; ADlgType: TMsgDlgType; AButtons:
+      TMsgDlgButtons; AParent: TForm; ADefModRes: TModalResult;
+      AInterval: Cardinal);
+    destructor Destroy; override;
+    function ShowDialog: TModalResult;
+  end;
+
   TGraphicType = record
     Offset, Len: Cardinal;
     Signature, Extension: PAnsiChar;
@@ -199,6 +215,51 @@ begin
     Result:=TFPReaderTiff;
 end;
 {$ENDIF}
+
+constructor TMsgDlgEx.Create(const AMsg: string; ADlgType: TMsgDlgType;
+  AButtons: TMsgDlgButtons; AParent: TForm; ADefModRes: TModalResult;
+  AInterval: Cardinal);
+begin
+  FMsgFrm := CreateMessageDialog(AMsg, ADlgType, AButtons);
+  FDefModRes := ADefModRes;
+  FParent := AParent;
+  FTimer := TTimer.Create(nil);
+  FTimer.Enabled := False;
+  FTimer.Interval := AInterval;
+  FTimer.OnTimer := {$IFNDEF NOFPCW}@{$ENDIF}DoOnTimer;
+end;
+
+destructor TMsgDlgEx.Destroy;
+begin
+  FTimer.Enabled := False;
+  FTimer.Free;
+  FMsgFrm.FormStyle:= fsNormal;
+  FMsgFrm.Hide;
+  FMsgFrm.Free;
+  inherited Destroy;
+end;
+
+function TMsgDlgEx.ShowDialog: TModalResult;
+begin
+  FMsgFrm.FormStyle := {$IFNDEF NOFPCW}fsSystemStayOnTop{$ELSE}fsStayOnTop{$ENDIF};
+  if FParent <> nil then
+  begin
+     FMsgFrm.Position := poDefaultSizeOnly;
+     FMsgFrm.Left := FParent.Left + (FParent.Width - FMsgFrm.Width) div 2;
+     FMsgFrm.Top := FParent.Top + (FParent.Height - FMsgFrm.Height) div 2;
+   end
+   else
+     FMsgFrm.Position := {$IFNDEF NOFPCW}poWorkAreaCenter{$ELSE}poScreenCenter{$ENDIF};
+   FTimer.Enabled := True;
+   Result := FMsgFrm.ShowModal;
+end;
+
+procedure TMsgDlgEx.DoOnTimer(Sender: TObject);
+begin
+  FTimer.Enabled := False;
+  FMsgFrm.ModalResult := FDefModRes;
+end;
+
 
 initialization
   MonoFonts:= TStringList.Create;
