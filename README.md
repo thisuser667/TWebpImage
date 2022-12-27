@@ -13,7 +13,7 @@ Gif didn't work very well in ExtendedImage, now is corrected.
 Also clear that I couldn't check the Lazarus version in other platform than Windows.
 
 2022 Dec. 27:
-Added AnimatedBox, replacement for ExtendedImage, it's a windowed control for viewing WicImage supported static file formats, gif and webp files. It uses the also added MovieImage, that implements gif and webp viewers and descends from TWicImage so it supports all wicImage supported static file formats. Both files are the same for Delphi and Lazarus, but keeping in mind that Lazarus, although may work in other SO because it doesn't uses Winapi.Windows.pas or any other Winapi unit, only is tested in Windows. 
+Added AnimatedBox, replacement for ExtendedImage, it's a windowed control for viewing WicImage supported static file formats, gif and webp files. It uses the also added MovieImage, that implements gif and webp viewers and descends from TWicImage in Windows and from TBitmap in Lazarus so it supports all wicImage supported static file formats in windows and the most used image formats in Lazarus. Both files are the same for Delphi and Lazarus, but keeping in mind that Lazarus, although may work in other SO because it doesn't uses Winapi.Windows.pas or any other Winapi unit, only is tested in Windows. 
 
 MovieImage.pas replaces WebpImage.pas as well and makes a propietary implementation of Gif images with some features long forgotten in many oher implementations, like PlainText extension or Disposal to the previous image. This implementation uses the decoding algorythm found in http://www.tolderlund.eu/delphi/gifimaged2010b.zip. For decoding webp images, it keeps using Libwebp124.pas.
 
