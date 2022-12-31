@@ -562,7 +562,6 @@ begin
       try
         Self.Handle:= wicbitmap;
         Self.ImageFormat:= wifJpeg;
-        //Self.SaveToFile('g:\poya.jpg');
         ACanvas.StretchDraw(ARect, Self);
       finally
         if curbitmap <> nil then
