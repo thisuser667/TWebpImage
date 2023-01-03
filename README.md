@@ -1,5 +1,5 @@
 # TWebpImage
-Descendant of delphi class TGraphic for webp and gif graphic file formats and others. Includes animation. Definitive and last implementation.
+Windowed control for viewing and animating many image formats including Webp and Gif, for Delphi and FPC.
 
 Implementation of a new graphic class for Delphi's TGraphic class, for the webp graphic format (libwebp.dll 1.2.4). As far as I know, nothing similar exists yet. It can be a valid starting point to do something more professional.
 
