@@ -1,7 +1,7 @@
 # TWebpImage
 Windowed control for viewing and animating many image formats including Webp and Gif, for Delphi and FPC.
 
-Implementation of a new graphic class for Delphi's TGraphic class, for the webp graphic format (libwebp.dll 1.2.4). As far as I know, nothing similar exists yet. It can be a valid starting point to do something more professional.
+Implementation of a complete package to view and animate images including a TCustomControl descendant, replacement for TImage, and a descendant from TWicImage in Delphi and TBitmap in FPC, that would be the TPicture in a TImage.
 
 It doesn't include the libwebp.dll library. You can download it precompiled in https://developers.google.com/speed/webp/download. If you don't know how to, just google for the library itself.
 
