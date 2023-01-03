@@ -13,9 +13,8 @@ Simple use:
 
 AnimatedImage.LoadFromFile  in any jpeg,png, etc., gif, and webp image files.
 
-AnimatedImage.StartAnimation if gif or webp file
-
-AnimatedImage.StopAnimation idem
+AnimatedImage.StartAnimation
+AnimatedImage.DrawFrame, etc.
 
 You can also paint in AnimatedImage anytime you want in the OnPaint event, unlike TImage in which it has to be an Tbitmap in the graphic.
 
